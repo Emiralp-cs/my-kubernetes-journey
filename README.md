@@ -53,10 +53,6 @@ Bütün örnekler **Kubernetes v1.37** ile (tek node'lu bir k3s kümesinde) dene
 | [Kubernetes API Reference](https://kubernetes.io/docs/reference/kubernetes-api/) | Her nesnenin bütün alanları |
 | [Killercoda](https://killercoda.com/playgrounds) | Tarayıcıda ücretsiz, hazır Kubernetes kümesi |
 
-## ✅ Otomatik test
-
-Her push'ta [GitHub Actions](.github/workflows/ci.yml) bütün YAML dosyalarını `yamllint` ile kontrol eder, sonra [kind](https://kind.sigs.k8s.io/) ile gerçek bir küme kurup 07, 08 ve 09'daki örnekleri uygular ve README'lerde anlatılan sonuçları verip vermediklerini kontrol eder. (`05-yaml/hatali.yaml` bilerek hatalı olduğu için kontrol dışı.)
-
 ## 📄 Lisans
 
 [CC0 1.0](LICENSE): İzin almadan, kaynak göstermeden istediğin gibi kullanabilirsin.
