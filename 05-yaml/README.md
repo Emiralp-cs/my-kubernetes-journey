@@ -1,6 +1,6 @@
 # 05 - YAML
 
-Kubernetes'e ne istediğimizi YAML dosyalarıyla söyleriz. Docker Compose ve GitHub Actions dosyaları da YAML. Kubernetes'teki hataların büyük kısmı YAML'daki küçük yazım hatalarından çıkar, bu yüzden kuralları iyi bilmek gerekiyor.
+Kubernetes'e ne istediğimizi YAML dosyalarıyla söyleriz. Docker Compose dosyaları da YAML. Kubernetes'teki hataların büyük kısmı YAML'daki küçük yazım hatalarından çıkar, bu yüzden kuralları iyi bilmek gerekiyor.
 
 YAML, veriyi **girinti** ile yapılandıran bir metin biçimidir. JSON'un da üst kümesidir: geçerli her JSON aynı zamanda geçerli bir YAML'dır.
 
