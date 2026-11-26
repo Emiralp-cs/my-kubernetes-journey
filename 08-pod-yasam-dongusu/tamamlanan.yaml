@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tamamlanan
+spec:
+  restartPolicy: Never
+  containers:
+    - name: is
+      image: alpine:3.24
+      command: ["sh", "-c", "echo 'Is basladi'; sleep 3; echo 'Is bitti'"]

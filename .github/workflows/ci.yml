@@ -1,0 +1,95 @@
+name: Örnekleri test et
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: YAML kontrolü (yamllint)
+        run: |
+          pipx install yamllint
+          yamllint -d "{extends: relaxed, rules: {line-length: disable}, ignore: [05-yaml/hatali.yaml]}" .
+          # Alıştırma dosyası bilerek hatalı: yamllint hata bulmalı
+          if yamllint 05-yaml/hatali.yaml; then
+            echo "hatali.yaml'da hata bulunamadı!"
+            exit 1
+          fi
+
+      - name: Kubernetes kümesi kur (kind)
+        uses: helm/kind-action@ea822c7bf1874f08e5a491df991c228edffc3376 # v1.15.2
+        with:
+          cluster_name: deneme
+
+      - name: Küme bilgisi
+        run: |
+          kubectl version
+          kubectl get nodes
+
+      - name: 07 - YAML ile Pod
+        working-directory: 07-pod-yaml
+        run: |
+          kubectl apply -f pod.yaml --dry-run=server
+          kubectl apply -f pod.yaml | grep "created"
+          kubectl wait --for=condition=Ready pod/karsilama --timeout=120s
+          kubectl apply -f pod.yaml | grep "unchanged"
+          # Çalışan pod'da port değiştirilemez
+          if sed 's/containerPort: 80/containerPort: 8080/' pod.yaml | kubectl apply -f - 2> hata.txt; then
+            echo "Port değişikliği kabul edilmemeliydi!"
+            exit 1
+          fi
+          grep "Forbidden" hata.txt
+          # Küçük harfli kind kabul edilmez
+          if sed 's/kind: Pod/kind: pod/; s/name: karsilama/name: deneme/' pod.yaml | kubectl apply -f - 2> hata.txt; then
+            echo "Küçük harfli kind kabul edilmemeliydi!"
+            exit 1
+          fi
+          grep 'no kind "pod" is registered' hata.txt
+          kubectl delete -f pod.yaml
+
+      - name: 08 - Pod'un yaşam döngüsü
+        working-directory: 08-pod-yasam-dongusu
+        run: |
+          kubectl apply -f .
+          kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/tamamlanan --timeout=120s
+          kubectl logs tamamlanan | grep "Is bitti"
+          kubectl wait --for=jsonpath='{.status.containerStatuses[0].restartCount}'=2 pod/coken --timeout=120s
+          kubectl get pod coken -o jsonpath='{.status.containerStatuses[0].lastState.terminated.exitCode}' | grep -x "1"
+          # Yeni başlayan container'ın hata mesajını yazmasını bekle
+          for _ in $(seq 1 30); do
+            kubectl logs coken | grep -q "Ayar dosyasi bulunamadi" && break
+            sleep 2
+          done
+          kubectl logs coken | grep "Ayar dosyasi bulunamadi"
+          kubectl wait --for=jsonpath='{.status.conditions[?(@.type=="PodScheduled")].reason}'=Unschedulable pod/bekleyen --timeout=60s
+          kubectl describe pod bekleyen | grep "Insufficient memory"
+          kubectl wait --for=jsonpath='{.status.containerStatuses[0].state.waiting.reason}'=ImagePullBackOff pod/yanlis-imaj --timeout=120s
+          kubectl get pods
+          kubectl delete -f . --now
+
+      - name: 09 - Çok container'lı pod
+        working-directory: 09-cok-containerli-pod
+        run: |
+          kubectl apply -f .
+          kubectl wait --for=condition=Ready pod/gunluk pod/komsular pod/hazirlikli pod/yerlesik-sidecar --timeout=120s
+          kubectl get pods
+          sleep 6
+          kubectl logs gunluk -c okuyucu | grep "siparis alindi"
+          kubectl logs yerlesik-sidecar -c okuyucu | grep "siparis alindi"
+          kubectl logs komsular -c kontrol | grep "web cevap verdi"
+          kubectl exec hazirlikli -c web -- wget -qO- localhost | grep "Init container hazirladi"
+          test "$(kubectl get pod yerlesik-sidecar -o jsonpath='{.status.initContainerStatuses[0].ready}')" = "true"
+          # Init container çöktüğü için ana container hiç başlamamalı
+          kubectl wait --for=jsonpath='{.status.initContainerStatuses[0].restartCount}'=1 pod/bozuk-init --timeout=120s
+          test "$(kubectl get pod bozuk-init -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}')" = "PodInitializing"
+          kubectl logs bozuk-init -c veritabani-bekle | grep "Baglanilamadi"
+          kubectl delete -f . --now

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: coken
+spec:
+  restartPolicy: Always
+  containers:
+    - name: uygulama
+      image: alpine:3.24
+      command: ["sh", "-c", "echo 'Basliyorum...'; sleep 2; echo 'Ayar dosyasi bulunamadi!'; exit 1"]

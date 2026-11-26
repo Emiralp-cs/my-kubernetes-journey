@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: komsular
+spec:
+  containers:
+    - name: web
+      image: nginx:1.30-alpine
+    - name: kontrol
+      image: alpine:3.24
+      command: ["sh", "-c", "sleep 3; while true; do wget -q -O /dev/null http://localhost:80 && echo 'web cevap verdi'; sleep 5; done"]

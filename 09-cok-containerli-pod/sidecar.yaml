@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: gunluk
+spec:
+  volumes:
+    - name: kayitlar
+      emptyDir: {}
+  containers:
+    - name: yazici
+      image: alpine:3.24
+      command: ["sh", "-c", "while true; do echo \"$(date '+%H:%M:%S') siparis alindi\" >> /veri/uygulama.log; sleep 2; done"]
+      volumeMounts:
+        - name: kayitlar
+          mountPath: /veri
+    - name: okuyucu
+      image: alpine:3.24
+      command: ["sh", "-c", "touch /kayit/uygulama.log; tail -f /kayit/uygulama.log"]
+      volumeMounts:
+        - name: kayitlar
+          mountPath: /kayit

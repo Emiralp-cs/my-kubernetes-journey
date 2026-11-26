@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hazirlikli
+spec:
+  volumes:
+    - name: site
+      emptyDir: {}
+  initContainers:
+    - name: hazirla
+      image: alpine:3.24
+      command: ["sh", "-c", "echo 'Sayfa hazirlaniyor...'; sleep 5; echo '<h1>Init container hazirladi</h1>' > /is/index.html"]
+      volumeMounts:
+        - name: site
+          mountPath: /is
+  containers:
+    - name: web
+      image: nginx:1.30-alpine
+      volumeMounts:
+        - name: site
+          mountPath: /usr/share/nginx/html

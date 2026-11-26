@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bozuk-init
+spec:
+  initContainers:
+    - name: veritabani-bekle
+      image: alpine:3.24
+      command: ["sh", "-c", "echo 'Veritabani bekleniyor...'; sleep 2; echo 'Baglanilamadi'; exit 1"]
+  containers:
+    - name: web
+      image: nginx:1.30-alpine

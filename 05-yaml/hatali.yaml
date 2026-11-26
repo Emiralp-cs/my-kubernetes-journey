@@ -1,0 +1,8 @@
+uygulama:
+  ad: kitapci
+  surum: 1.10
+  aktif:yes
+  portlar: [80,443]
+	ortam: test
+  sahibi: Ayse
+  sahibi: Mert
